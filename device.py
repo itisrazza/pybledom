@@ -1,4 +1,8 @@
+import datetime
 from enum import IntFlag
+from bleak import BleakClient
+
+BLEDOM_CHARACTERISTIC = "0000fff3-0000-1000-8000-00805f9b34fb"
 
 
 class Days(IntFlag):
@@ -41,42 +45,76 @@ class Effects(IntFlag):
 
 
 class BleLedDevice:
-    def __init__(self):
-        self.peripheral = None
-        self.characteristics = None
+    def __init__(self, peripheral, characteristics):
+        self.peripheral = peripheral
+        self.characteristics = characteristics
 
-        self.sync_time()
-        self.power_on()
+    @staticmethod
+    async def new(bt_client: BleakClient) -> "BleLedDevice":
+        characteristics = []
+        for service in await bt_client.get_services():
+            for characteristic in service.characteristics:
+                if characteristic.uuid == BLEDOM_CHARACTERISTIC:
+                    characteristics.append(characteristic)
 
-    def sync_time(self):
+        device = BleLedDevice(bt_client, characteristics)
+        await device.sync_time()
+        await device.power_on()
+        return device
+
+    def _characteristic(self):
+        return self.characteristics[0]
+
+    async def sync_time(self):
         pass
 
-    def set_custom_time(self, hour: int, minute: int, second: int, day_of_week: int):
+    async def set_custom_time(self,
+                              hour: int,
+                              minute: int,
+                              second: int,
+                              day_of_week: int):
         pass
 
-    def power_on(self):
+    async def power_on(self):
+        await self.generic_command(0x04, 0xF0, 0x00, 0x01, 0xFF)
+
+    async def power_off(self):
         pass
 
-    def power_off(self):
+    async def set_color(self, red: int, green: int, blue: int):
+        await self.generic_command(0x05, 0x03, red, green, blue)
+
+    async def set_brightness(self, value: int):
         pass
 
-    def set_color(self, red: int, green: int, blue: int):
+    async def set_effect(self, value: int):
         pass
 
-    def set_brightness(self, value: int):
+    async def set_effect_speed(self, value: int):
         pass
 
-    def set_effect(self, value: int):
+    async def set_schedule_on(self,
+                              days: int,
+                              hours: int,
+                              minutes: int,
+                              enabled: bool):
         pass
 
-    def set_effect_speed(self, value: int):
+    async def set_schedule_off(self,
+                               days: int,
+                               hours: int,
+                               minutes: int,
+                               enabled: bool):
         pass
 
-    def set_schedule_on(self, days: int, hours: int, minutes: int, enabled: bool):
-        pass
+    async def generic_command(self,
+                              id: int,
+                              sub_id: int,
+                              arg1: int,
+                              arg2: int,
+                              arg3: int):
+        data = bytearray(
+            [0x7E, 0x00, id, sub_id, arg1, arg2, arg3, 0x00, 0xEF])
 
-    def set_schedule_off(self, days: int, hours: int, minutes: int, enabled: bool):
-        pass
-
-    def generic_command(self, id: int, sub_id: int, arg1: int, arg2: int, arg3: int):
-        pass
+        print("sending message %s", list(data))
+        await self.peripheral.write_gatt_char(self._characteristic(), data)

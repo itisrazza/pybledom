@@ -1,6 +1,7 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
 from bleak.backends.device import BLEDevice
+from device import BleLedDevice
 import util
 import sys
 import os
@@ -43,17 +44,7 @@ async def connect_bt_device(device) -> BleakClient:
     print("Connecting to %s (%s)..." % (device.name, device.address))
 
     client = BleakClient(device)
-    try:
-        await client.connect()
-        for service in await client.get_services():
-            print(service)
-            for characteristic in service.characteristics:
-                print("- %s" % characteristic)
-
-    finally:
-        # disconnect early if it fails
-        await client.disconnect()
-
+    await client.connect()
     return client
 
 
@@ -64,7 +55,10 @@ async def run():
     bt_device = await select_bt_device()
     bt_client = await connect_bt_device(bt_device)
     try:
-        pass
+        device = await BleLedDevice.new(bt_client)
+
+        print("making it purple...")
+        await device.set_color(128, 0, 128)  # make it purple
     finally:
         # disconnect when we finish
         await bt_client.disconnect()
