@@ -79,32 +79,43 @@ class BleLedDevice:
         await self.generic_command(0x04, 0xF0, 0x00, 0x01, 0xFF)
 
     async def power_off(self):
-        pass
+        await self.generic_command(0x04, 0x00, 0x00, 0x00, 0xFF)
 
     async def set_color(self, red: int, green: int, blue: int):
         await self.generic_command(0x05, 0x03, red, green, blue)
 
     async def set_brightness(self, value: int):
-        pass
+        await self.generic_command(0x01, min(value, 0x64), 0, 0, 0)
 
-    async def set_effect(self, value: int):
-        pass
+    async def set_effect(self, value: Effects):
+        await self.generic_command(0x03, value.value, 0, 0, 0)
 
     async def set_effect_speed(self, value: int):
-        pass
+        await self.generic_command(0x02, min(value, 0x64), 0, 0, 0)
 
     async def set_schedule_on(self,
                               days: int,
                               hours: int,
                               minutes: int,
                               enabled: bool):
-        pass
+        await self.generic_command(0x82,
+                                   min(hours, 23),
+                                   min(hours, 59),
+                                   0,
+                                   0,
+                                   (days + 0x80) if enabled else days)
 
     async def set_schedule_off(self,
                                days: int,
                                hours: int,
                                minutes: int,
                                enabled: bool):
+        await self.generic_command(0x82,
+                                   min(hours, 23),
+                                   min(hours, 59),
+                                   0,
+                                   0,
+                                   (days + 0x80) if enabled else days)
         pass
 
     async def generic_command(self,

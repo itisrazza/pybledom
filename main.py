@@ -58,12 +58,16 @@ async def run():
         device = await BleLedDevice.new(bt_client)
 
         print("making it purple...")
-        await device.set_color(128, 0, 128)  # make it purple
+        await device.set_color(128, 128, 0)  # make it purple
     finally:
         # disconnect when we finish
         await bt_client.disconnect()
 
 
-if __name__ == "__main__":
+def run_sync():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run())
+
+
+if __name__ == "__main__":
+    run_sync()
