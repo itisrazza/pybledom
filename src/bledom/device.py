@@ -1,6 +1,7 @@
-import datetime
+from datetime import datetime
 from enum import IntFlag
-from bleak import BleakClient
+from bleak import BleakClient, BleakScanner
+from typing import Optional, List
 
 BLEDOM_CHARACTERISTIC = "0000fff3-0000-1000-8000-00805f9b34fb"
 
@@ -66,14 +67,14 @@ class BleLedDevice:
         return self.characteristics[0]
 
     async def sync_time(self):
-        pass
+        print("BleLedDevice::sync_time - stub !")
 
     async def set_custom_time(self,
                               hour: int,
                               minute: int,
                               second: int,
                               day_of_week: int):
-        pass
+        print("BleLedDevice::set_custom_time - stub !")
 
     async def power_on(self):
         await self.generic_command(0x04, 0xF0, 0x00, 0x01, 0xFF)

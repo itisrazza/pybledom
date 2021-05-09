@@ -5,6 +5,7 @@ from device import BleLedDevice
 import util
 import sys
 import os
+from random import randint
 
 
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
@@ -48,7 +49,14 @@ async def connect_bt_device(device) -> BleakClient:
     return client
 
 
-async def run():
+async def default_callable(device: BleLedDevice):
+    while True:
+        await device.set_color(randint(0, 255),
+                               randint(0, 255),
+                               randint(0, 255))
+
+
+async def run(func: callable):
     """
     Main program.
     """
@@ -56,17 +64,15 @@ async def run():
     bt_client = await connect_bt_device(bt_device)
     try:
         device = await BleLedDevice.new(bt_client)
-
-        print("making it purple...")
-        await device.set_color(128, 128, 0)  # make it purple
+        await func(device)
     finally:
         # disconnect when we finish
         await bt_client.disconnect()
 
 
-def run_sync():
+def run_sync(func: callable = default_callable):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(run())
+    loop.run_until_complete(run(func))
 
 
 if __name__ == "__main__":
