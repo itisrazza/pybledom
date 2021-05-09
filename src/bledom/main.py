@@ -1,14 +1,15 @@
 import asyncio
-from bleak import BleakScanner, BleakClient
-from bleak.backends.device import BLEDevice
-from device import BleLedDevice
-import util
 import sys
 import os
 from random import randint
 
+# bleak imports
+from bleak import BleakScanner, BleakClient
+from bleak.backends.device import BLEDevice
 
-MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
+# project imports
+from . import util
+from .device import BleLedDevice
 
 
 async def select_bt_device() -> BLEDevice:
@@ -50,6 +51,10 @@ async def connect_bt_device(device) -> BleakClient:
 
 
 async def default_callable(device: BleLedDevice):
+    """
+    The default run function. Randomly sets colours on the LED strip.
+    """
+
     while True:
         await device.set_color(randint(0, 255),
                                randint(0, 255),
@@ -58,8 +63,9 @@ async def default_callable(device: BleLedDevice):
 
 async def run(func: callable):
     """
-    Main program.
+    Sets up the device and calls the provided function.
     """
+
     bt_device = await select_bt_device()
     bt_client = await connect_bt_device(bt_device)
     try:
@@ -71,6 +77,11 @@ async def run(func: callable):
 
 
 def run_sync(func: callable = default_callable):
+    """
+    Sets up the device and calls the provided function. If not provided, will
+    use a demo function instead.
+    """
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(func))
 
