@@ -1,4 +1,4 @@
-from main import run_sync
+from .main import run_sync
 
 # run the main program
 

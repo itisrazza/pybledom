@@ -86,9 +86,9 @@ class BleLedDevice:
         Sets the controller time to a custom timestamp.
         """
 
-        hour = time.hour()
-        minute = time.minute()
-        second = time.second()
+        hour = time.hour
+        minute = time.minute
+        second = time.second
         day_of_week = time.weekday() + 1    # 1 (monday) -> 7 (sunday)
         await self.generic_command(0x83,
                                    min(hour, 23),
