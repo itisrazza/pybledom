@@ -104,5 +104,4 @@ This library is a port of [a Rust library written by TheSylex][rust-lib].
 
 Salutations to [Joel](https://github.com/jxeldotdev).
 
-[BleakClient]: 
 [rust-lib]: https://github.com/TheSylex/ELK-BLEDOM-bluetooth-led-strip-controller
