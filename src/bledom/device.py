@@ -52,6 +52,10 @@ class BleLedDevice:
 
     @staticmethod
     async def new(bt_client: BleakClient) -> "BleLedDevice":
+        """
+        Uses the Bluetooth client as a LED controller.
+        """
+
         characteristics = []
         for service in await bt_client.get_services():
             for characteristic in service.characteristics:
@@ -64,69 +68,143 @@ class BleLedDevice:
         return device
 
     def _characteristic(self):
+        """
+        Returns the BLEDOM characteristic.
+        """
+
         return self.characteristics[0]
 
     async def sync_time(self):
-        print("BleLedDevice::sync_time - stub !")
+        """
+        Syncronises the controller with system time.
+        """
+
+        await self.set_custom_time(datetime.now())
 
     async def set_custom_time(self, time: datetime):
+        """
+        Sets the controller time to a custom timestamp.
+        """
+
         hour = time.hour()
         minute = time.minute()
         second = time.second()
         day_of_week = time.weekday() + 1    # 1 (monday) -> 7 (sunday)
-        print("BleLedDevice::set_custom_time - stub !")
+        await self.generic_command(0x83,
+                                   min(hour, 23),
+                                   min(minute, 59),
+                                   min(second, 59),
+                                   max(1, min(day_of_week, 7)))
 
     async def power_on(self):
+        """
+        Power LED strip on.
+        """
+
         await self.generic_command(0x04, 0xF0, 0x00, 0x01, 0xFF)
 
     async def power_off(self):
+        """
+        Power LED strip off.
+        """
+
         await self.generic_command(0x04, 0x00, 0x00, 0x00, 0xFF)
 
     async def set_color(self, red: int, green: int, blue: int):
+        """
+        Show a solid colour.
+
+        The values for `red`, `green` and `blue` are expected to be integers
+        with values between 0 and 255 (inclusive).
+        """
+
         await self.generic_command(0x05, 0x03, red, green, blue)
 
     async def set_brightness(self, value: int):
+        """
+        Show a solid brightness.
+
+        The value for `value` is expected to be an integer between 0 and 100 
+        (inclusive).
+        """
+
         await self.generic_command(0x01, min(value, 100), 0, 0, 0)
 
-    async def set_effect(self, value: Effects):
-        await self.generic_command(0x03, value.value, 0, 0, 0)
+    async def set_effect(self, effect: Effects):
+        """
+        Show an effect.
+        """
+
+        await self.generic_command(0x03, effect.value, 0, 0, 0)
 
     async def set_effect_speed(self, value: int):
+        """
+        Sets the effect speed.
+
+        `value` is expected to be an integer between 0 and 100 (inclusive).
+        """
+
         await self.generic_command(0x02, min(value, 100), 0, 0, 0)
 
     async def set_schedule_on(self,
-                              days: int,
+                              days: Days,
                               hours: int,
                               minutes: int,
                               enabled: bool):
+        """
+        Sets the schedule for turning LEDs on.
+
+        * days    - day to occur on
+        * hours   - integer between 0 and 24 (exclusive)
+        * minutes - integer between 0 and 60 (exclusive)
+        * enabled - whether schedule is enabled or not
+        """
+
+        value = days.value | (0x80 if enabled else 0x00)
         await self.generic_command(0x82,
                                    min(hours, 23),
-                                   min(hours, 59),
+                                   min(minutes, 59),
                                    0,
                                    0,
-                                   (days + 0x80) if enabled else days)
+                                   value)
 
     async def set_schedule_off(self,
-                               days: int,
+                               days: Days,
                                hours: int,
                                minutes: int,
                                enabled: bool):
+        """
+        Sets the schedule for turning LEDs off.
+
+        * days    - day to occur on
+        * hours   - integer between 0 and 24 (exclusive)
+        * minutes - integer between 0 and 60 (exclusive)
+        * enabled - whether schedule is enabled or not
+        """
+
+        value = days.value | (0x80 if enabled else 0x00)
         await self.generic_command(0x82,
                                    min(hours, 23),
-                                   min(hours, 59),
+                                   min(minutes, 59),
                                    0,
-                                   0,
-                                   (days + 0x80) if enabled else days)
+                                   1,
+                                   value)
         pass
 
     async def generic_command(self,
                               id: int,
-                              sub_id: int,
-                              arg1: int,
-                              arg2: int,
-                              arg3: int):
-        data = bytearray(
-            [0x7E, 0x00, id, sub_id, arg1, arg2, arg3, 0x00, 0xEF])
+                              arg0: int = 0x00,
+                              arg1: int = 0x00,
+                              arg2: int = 0x00,
+                              arg3: int = 0x00,
+                              arg4: int = 0x00):
+        """
+        Sends a command to the LED controller.
+        """
 
-        print("sending message %s", list(data))
+        data = bytearray([0x7E, 0x00,
+                          id, arg0, arg1, arg2, arg3, arg4,
+                          0xEF])
+
+        print("sending message %s" % list(data))
         await self.peripheral.write_gatt_char(self._characteristic(), data)
