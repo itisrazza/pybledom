@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import IntFlag
+from enum import IntFlag, IntEnum
 from bleak import BleakClient, BleakScanner
 from typing import Optional, List
 
@@ -20,7 +20,7 @@ class Days(IntFlag):
     NONE = 0
 
 
-class Effects(IntFlag):
+class Effects(IntEnum):
     JUMP_RED_GREEN_BLUE = 0x87
     JUMP_RED_GREEN_BLUE_YELLOW_CYAN_MAGENTA_WHITE = 0x88
     CROSSFADE_RED = 0x8b
@@ -69,11 +69,11 @@ class BleLedDevice:
     async def sync_time(self):
         print("BleLedDevice::sync_time - stub !")
 
-    async def set_custom_time(self,
-                              hour: int,
-                              minute: int,
-                              second: int,
-                              day_of_week: int):
+    async def set_custom_time(self, time: datetime):
+        hour = time.hour()
+        minute = time.minute()
+        second = time.second()
+        day_of_week = time.weekday() + 1    # 1 (monday) -> 7 (sunday)
         print("BleLedDevice::set_custom_time - stub !")
 
     async def power_on(self):
@@ -86,13 +86,13 @@ class BleLedDevice:
         await self.generic_command(0x05, 0x03, red, green, blue)
 
     async def set_brightness(self, value: int):
-        await self.generic_command(0x01, min(value, 0x64), 0, 0, 0)
+        await self.generic_command(0x01, min(value, 100), 0, 0, 0)
 
     async def set_effect(self, value: Effects):
         await self.generic_command(0x03, value.value, 0, 0, 0)
 
     async def set_effect_speed(self, value: int):
-        await self.generic_command(0x02, min(value, 0x64), 0, 0, 0)
+        await self.generic_command(0x02, min(value, 100), 0, 0, 0)
 
     async def set_schedule_on(self,
                               days: int,

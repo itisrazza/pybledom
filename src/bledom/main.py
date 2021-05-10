@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import os
+from time import sleep
 from random import randint
 
 # bleak imports
@@ -56,6 +57,7 @@ async def default_callable(device: BleLedDevice):
     """
 
     while True:
+        sleep(2)
         await device.set_color(randint(0, 255),
                                randint(0, 255),
                                randint(0, 255))
