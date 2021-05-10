@@ -1,4 +1,4 @@
-from bledom import Days
+from ..src.bledom import Days
 
 
 def test_all_days():
