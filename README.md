@@ -4,30 +4,35 @@
 
 ## Demo Program
 
-This library comes with a demo program.
+This library comes with a demo program. 
+
+You can set the color via a matplotlib color name, turn it off, set a brightness. 
+
+No param leads to the help message.
 
 ```bash
-python -m bledom
+python -m [off | color-name | brightness-level [0-100]]
 ```
 
 ## API
 
-### Run API
+### Usage
 
-You can let the library do the Bluetooth set up for you by creating a main function which the library will call after having set up the Bluetooth device.
+BleakScanner -> BleakClient -> BleLedDevice
 
 ```python
-from time import sleep
-from bledom import BleLedDevice, run_sync
+import asyncio
+from bledom.device import BleLedDevice
+from bleak import BleakScanner, BleakClient
 
-async def main(device: BleLedDevice):
-    while True:
-        sleep(2)
-        await device.set_color(randint(0, 255),
-                               randint(0, 255),
-                               randint(0, 255))
+async def main():
+    for device in await BleakScanner.discover():
+        client = BleakClient(device)
+        await client.connect()
+        device = await BleLedDevice.new(client)
+        await device.power_off()
 
-run_sync(main)
+asyncio.run(main())
 ```
 
 ### Device API
