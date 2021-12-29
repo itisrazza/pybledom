@@ -1,1 +1,2 @@
 bleak>=0.11.0
+matplotlib>=3
