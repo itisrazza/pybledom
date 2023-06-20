@@ -57,7 +57,7 @@ class BleLedDevice:
         """
 
         characteristics = []
-        for service in await bt_client.get_services():
+        for service in bt_client.services:
             for characteristic in service.characteristics:
                 if characteristic.uuid == BLEDOM_CHARACTERISTIC:
                     characteristics.append(characteristic)
